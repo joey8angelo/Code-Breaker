@@ -8,7 +8,7 @@ std::vector<int> computePQ(int);
 int computeEulersTotient(int, int);
 int computeDecryptionExponent(int, int);
 bool isPublicKeyValid(int, int, int, int, int);
-int decrypt(int, int, int);
+int largeExponentMod(int, int, int);
 
 int main(int, char**) {
     int e, n, p, q, t, de, m, c;
@@ -36,7 +36,7 @@ int main(int, char**) {
     while (m > 0) {
         std::cout << "Enter encrypted character: ";
         std::cin >> c;
-        int value = decrypt(c, de, n);
+        int value = largeExponentMod(c, de, n);
         if (value >= 4 && value <= 29) { // 4-29 are A-Z these values can be offset by 61 to equal the ascii representation which can be stored as a char
             char o = value + 61;
             output += o;
@@ -94,7 +94,7 @@ int computeDecryptionExponent(int e, int t) { // d is the inverse of e mod euler
     return -1; // if no values found catch this in isPublicKeyValid()
 }
 
-int decrypt(int x, int y, int n) {
+int largeExponentMod(int x, int y, int n) {
     int z = 1;
     while (y > 0) { // fancy way of doing mod - x^y may be too large to just do x^y % n
         z *= x;     // y is the exponent, you can break x^y into smaller pieces x * x^y-1 then take the mod of that times whatver remainder was left over last time it was done

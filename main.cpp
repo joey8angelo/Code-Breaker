@@ -35,7 +35,7 @@ int main(int, char**) {
            std::getline(std::cin, s);
            cout << encrypt(e, n, s) << endl;
            break;
-      case 1:;
+      case 1:
         cout << decryptInput(e, n) << endl;
         break;
     }

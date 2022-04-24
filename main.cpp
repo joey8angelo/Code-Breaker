@@ -3,60 +3,42 @@
 #include <cmath>
 #include <algorithm>
 #include <string>
+#include <fstream>
 
 std::vector<int> computePQ(int);
 int computeEulersTotient(int, int);
 int computeDecryptionExponent(int, int);
 bool isPublicKeyValid(int, int, int, int, int);
 int largeExponentMod(int, int, int);
+std::string decryptInput(int, int);
+std::string encrypt(int, int, std::string);
+
+using std::cout;
+using std::endl;
 
 int main(int, char**) {
-    int e, n, p, q, t, de, m, c;
-    std::cout << "Enter e: ";
+    int e, n;
+    cout << "Enter e: ";
     std::cin >> e;
-    std::cout << "Enter n: ";
+    cout << "Enter n: ";
     std::cin >> n;
-    std::cout << "Enter m: ";
-    std::cin >> m;
 
-    std::vector<int> ints = computePQ(n);
-    p = ints.at(0);
-    q = ints.at(1);
+    cout << "Enter 0 or 1 to Encrypt or Decrypt a message: ";
+    int ED;
+    std::cin >> ED;
 
-    t = computeEulersTotient(p, q);
-    de = computeDecryptionExponent(e, t);
-
-    if ( !isPublicKeyValid(p, q, t, e, de) ) {
-        std::cout << "Public key is not valid!" << std::endl;
-        return 1;
+    std::string s;
+    switch(ED){
+      case 0:
+           cout << "Enter message to encrypt: ";
+           std::cin.ignore();
+           std::getline(std::cin, s);
+           cout << encrypt(e, n, s) << endl;
+           break;
+      case 1:;
+        cout << decryptInput(e, n) << endl;
+        break;
     }
-
-    int outputDataControl = 1;
-    std::string output;
-    while (m > 0) {
-        std::cout << "Enter encrypted character: ";
-        std::cin >> c;
-        int value = largeExponentMod(c, de, n);
-        if (value >= 4 && value <= 29) { // 4-29 are A-Z these values can be offset by 61 to equal the ascii representation which can be stored as a char
-            char o = value + 61;
-            output += o;
-        }
-        else if (value == 30) { output += ' ';}
-        else if (value == 31) { output += '\"';}
-        else if (value == 32) { output += '.';}
-        else if (value == 33) { output += ',';}
-        else if (value == 34) { output += '\'';}
-        m -= 1;
-        
-        if (outputDataControl == 1) {
-            std::cout << p << ' ' << q << ' ' << t << ' ' << de << std::endl;
-            outputDataControl = 0;
-        }
-
-        std::cout << value << ' ';
-    }
-    std::cout << std::endl;
-    std::cout << output << std::endl;
     return 0;
 }
 //brute force p and q
@@ -109,4 +91,48 @@ bool isPublicKeyValid(int p, int q, int t, int e, int de) { // check if the publ
     if (std::__gcd(e, t) != 1) { return false; } // e and t must be coprime
     if (de == -1) { return false; } // if de is -1 then no decryption exponent was found
     return true;
+}
+
+std::string decryptInput(int e, int n) {
+    int p, q;
+    std::string output = "";
+
+    std::vector<int> ints = computePQ(n);
+    p = ints.at(0);
+    q = ints.at(1);
+
+    int t, de;
+    t = computeEulersTotient(p, q);
+    de = computeDecryptionExponent(e, t);
+
+    if ( !isPublicKeyValid(p, q, t, e, de) ) {
+        cout << "Public key is not valid!" << endl;
+        return "";
+    }
+
+    std::ifstream inFS;
+    inFS.open("input.txt");
+
+    if (!inFS.is_open()) {
+        cout << "could not open input.txt" << endl;
+        exit(EXIT_FAILURE);
+    }
+    int c;
+    while (inFS >> c) {
+        int value = largeExponentMod(c, de, n);
+        output += value;
+    }
+    inFS.close();
+    return output;
+}
+
+std::string encrypt(int e, int n, std::string m) {
+    std::string output;
+    for (int i = 0; i < m.length(); i++) {
+        int num = m.at(i);
+        int value = largeExponentMod(num, e, n);
+        if (i != 0) { output += ' '; }
+        output.append(std::to_string(value));
+    }
+    return output;
 }
